@@ -667,4 +667,292 @@
       </mvc:annotation-driven>
   ```
 
+
+# 8.ajax
+
+- ```java
+  @RestController
+  public class AjaxController {
+      @RequestMapping("/a3")
+      public String a3(String name,String pwd){
+          String msg = "";
+          if (name !=null){
+              if ("admin".equals(name)){
+                  msg = "ok";
+              }else {
+                  msg = "error";
+              }
+          }
+          if (pwd !=null){
+              if ("admin".equals(name)){
+                  msg = "ok";
+              }else {
+                  msg = "fail";
+              }
+          }
+          return msg;
+      }
+  }
+  
+  ```
+
+- ```jsp
+  <script src="${pageContext.request.contextPath}/lib/jquery-3.4.1.js"></script>
+  
+      <script>
+              function t1() {
+                  $.post({
+                      url : "${pageContext.request.contextPath}/a3",
+                      
+                    //$('#name').val()是取的输入框的值，赋值给name
+                    //隐式调用 public String a3(String name,String pwd)        这个方法，将name传给后端，然后调用之后返回mas，也就是data=mag的值
+                      data: {"name":$('#name').val()},
+                      
+                      success:function (data) {
+                          if (data.toString() === "ok"){
+                              $('#info').html(data)
+                          }
+                      }
+                  })
+              }
+  
+  
+      </script>
+  
+  </head>
+  <body>
+  
+<p>用户名：<input type="text" id="name" onblur="t1()"> </p>
+  <span id="info"></span>
+  
+  ```
+  
+- 写一个User.java,然后AjaxConller.java：
+
+  ```java
+  package com.it.controller;
+  
+  import com.it.pojo.User;
+  import org.springframework.web.bind.annotation.RequestMapping;
+  import org.springframework.web.bind.annotation.RestController;
+  
+  import javax.servlet.http.HttpServletResponse;
+  import java.io.IOException;
+  import java.util.ArrayList;
+  import java.util.List;
+  
+  @RestController
+  public class AjaxController {
+  
+      @RequestMapping("/t1")
+      public String text1(){
+  
+          return "hello ajax";
+      }
+  
+      @RequestMapping("/a1")
+      public void a(String name, HttpServletResponse response) throws IOException {
+          if ("haha".equals(name)){
+              response.getWriter().print("true");
+          }else {
+              response.getWriter().print("false");
+          }
+      }
+      @RequestMapping("/a2")
+      public List<User> a2(){
+          List<User> users = new ArrayList<User>();
+          users.add(new User("li","nan",1));
+          users.add(new User("aai","aafan",10));
+          users.add(new User("bbbi","ndan",10));
+  
+          return users;
+      }
+      @RequestMapping("/a3")
+      public String a3(String name,String pwd){
+          String msg = "";
+          if (name !=null){
+              if ("admin".equals(name)){
+                  msg = "ok";
+              }else {
+                  msg = "error";
+              }
+          }
+          if (pwd !=null){
+              if ("admin".equals(name)){
+                  msg = "ok";
+              }else {
+                  msg = "fail";
+              }
+          }
+          return msg;
+      }
+  }
+  
+  ```
+
+- test2：
+
+  ```xml
+  <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+  <html>
+  <head>
+      <title>Title</title>
+      <script src="${pageContext.request.contextPath}/lib/jquery-3.4.1.js"></script>
+  
+      <script>
+          $(function () {
+              $('#btn').click(function () {
+                      $.post('${pageContext.request.contextPath}/a2',function (data) {
+  
+                      var html = "";
+  
+                      for (let i=0; i<data.length;i++){
+                          html+= '<tr>'+
+                          '<td>'+data[i].name+'</td>'+
+                          '<td>'+data[i].sex+'</td>'+
+                          '<td>'+data[i].age+'</td>'+
+                          '</tr>';
+                      }
+                      $('#content').html(html);
+  
+                  })
+              })
+          });
+  
+      </script>
+  
+  </head>
+  <body>
+  
+  <input type="button" value="加载数据" id="btn">
+  <table>
+      <tr>
+      <td>姓名</td>
+      <td>性别</td>
+      <td>年龄</td>
+      </tr>
+      <tbody id="content">
+  
+      </tbody>
+  
+  </table>
+  
+  </body>
+  </html>
+  ```
+
+- index.jsp：
+
+  ```jsp
+  <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+  <html>
+    <head>
+      <title>$Title$</title>
+      <script src="${pageContext.request.contextPath}/lib/jquery-3.4.1.js"></script>
+  
+      <script>
+          function a() {
+              $.post({
+                url:"${pageContext.request.contextPath}/a1",
+                data:{"name":$('#username').val()},
+                success:function (data) {
+                        alert(data);
+                }
+  
+              })
+          }
+      </script>
+  
+    </head>
+    <body>
+  
+  <%--  失去焦点的时候，发送一个请求到后台--%>
+    <input type="text" id="username" onblur="a()">
+  
+  
+    </body>
+  </html>
+  ```
+
+### 注册提示效果
+
+- 我们写一个Controller：
+
+  ```java
+  @RequestMapping("/a3")
+  public String ajax3(String name,String pwd){
+      String msg = "";
+      //模拟数据库中存在数据
+      if (name!=null){
+          if ("admin".equals(name)){
+              msg = "OK";
+          }else {
+              msg = "用户名输入错误";
+          }
+      }
+      if (pwd!=null){
+          if ("123456".equals(pwd)){
+              msg = "OK";
+          }else {
+              msg = "密码输入有误";
+          }
+      }
+      return msg; //由于@RestController注解，将msg转成json格式返回
+  }
+  ```
+
+- 前端页面 login.jsp：
+
+  ```jsp
+  <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+  <html>
+  <head>
+      <title>ajax</title>
+      <script src="${pageContext.request.contextPath}/jquery-3.1.1.min.js"></script>
+      <script>
+  
+          function a1(){
+              $.post({
+                  url:"${pageContext.request.contextPath}/a3",
+                  data:{'name':$("#name").val()},
+                  success:function (data) {
+                      if (data.toString()=='OK'){
+                          $("#userInfo").css("color","green");
+                      }else {
+                          $("#userInfo").css("color","red");
+                      }
+                      $("#userInfo").html(data);
+                  }
+              });
+          }
+          function a2(){
+              $.post({
+                  url:"${pageContext.request.contextPath}/a3",
+                  data:{'pwd':$("#pwd").val()},
+                  success:function (data) {
+                      if (data.toString()=='OK'){
+                          $("#pwdInfo").css("color","green");
+                      }else {
+                          $("#pwdInfo").css("color","red");
+                      }
+                      $("#pwdInfo").html(data);
+                  }
+              });
+          }
+  
+      </script>
+  </head>
+  <body>
+  <p>
+      用户名:<input type="text" id="name" onblur="a1()"/>
+      <span id="userInfo"></span>
+  </p>
+  <p>
+      密码:<input type="text" id="pwd" onblur="a2()"/>
+      <span id="pwdInfo"></span>
+  </p>
+  </body>
+  </html>
+  ```
+
   
